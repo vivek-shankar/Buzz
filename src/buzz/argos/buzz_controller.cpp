@@ -786,6 +786,7 @@ void CBuzzController::ProcessOutMsgs() {
    /* Send robot id */
    CByteArray cData;
    cData << m_tBuzzVM->robot;
+   SInt32 totalMsgSent=0;
    /* Send messages from FIFO */
    do {
       /* Are there more messages? */
@@ -806,6 +807,7 @@ void CBuzzController::ProcessOutMsgs() {
          cData << static_cast<UInt16>(buzzmsg_payload_size(m));
          /* Add payload to data buffer */
          cData.AddBuffer(reinterpret_cast<UInt8*>(m->data), buzzmsg_payload_size(m));
+         totalMsgSent+=unMsgSize;
       }
       else {
          RLOGERR << "Discarded oversize message ("
@@ -832,6 +834,10 @@ void CBuzzController::ProcessOutMsgs() {
    /* Create new debug.msgqueue table */
    buzzvm_pushs(m_tBuzzVM, buzzvm_string_register(m_tBuzzVM, "msgqueue", 1));
    buzzobj_t tMsgQueue = buzzheap_newobj(m_tBuzzVM, BUZZTYPE_TABLE);
+   /* Set debug.msgqueue.sent */
+   TablePut(tMsgQueue,
+            "sent",
+            static_cast<SInt32>(totalMsgSent));
    /* Set debug.msgqueue.total */
    TablePut(tMsgQueue,
             "total",
